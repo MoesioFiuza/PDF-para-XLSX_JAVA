@@ -86,7 +86,6 @@ public class ProcessadorPDF {
             );
             dadosTabela.add(cabecalhos);
 
-            // Padrao para capturar cada bloco de registro
             Pattern padraoBlocoRegistro = Pattern.compile(
                 "(\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4}[\\s\\S]*?)(?=\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4}|$)"
             );
@@ -99,7 +98,6 @@ public class ProcessadorPDF {
                 if (!linhaDados.isEmpty() && linhaDados.size() == cabecalhos.size()) {
                     dadosTabela.add(linhaDados);
                 } else {
-                    // Aviso se a linha não for parseada ou tiver colunas incorretas
                     System.err.println("Aviso: Linha não parseada ou com número de colunas incorreto. Bloco: '" + blocoRegistroBruto + "'");
                 }
             }
@@ -110,8 +108,6 @@ public class ProcessadorPDF {
     private static List<String> parsearRegistroComplexo(String blocoRegistroBruto) {
         List<String> dadosLinha = new ArrayList<>();
 
-        // Limpeza inicial do bloco: remover aspas, normalizar quebras de linha/espaços.
-        // Correção de caracteres especiais
         String blocoLimpo = blocoRegistroBruto.replaceAll("\"", "")
                                               .replaceAll("\r?\n", " ")
                                               .replaceAll("\\s+", " ")
@@ -124,28 +120,23 @@ public class ProcessadorPDF {
                                               .replaceAll("├║", "ú")
                                               .replaceAll("├º", "ç").replaceAll("├ç", "Ç")
                                               .replaceAll("┬º", "º")
-                                              // REMOÇÃO MAIS AGRESSIVA DE "LIXO"
-                                              // Regex flexível para remover "PODER JUDICIÁRIO" e o que vier depois até um número
                                               .replaceAll("PODER JUDICIÁRIO.*?\\bTribunal de Justiça do Estado da Bahia\\b\\s*\\d+", "")
-                                              // Remove o cabeçalho 'Processo Ação...' se aparecer no meio de um registro
                                               .replaceAll("\\bProcesso\\s+Ação\\s+Órgão\\s+Julgador\\s+Assunto\\s+Distribuição\\s+Tipo\\s+Participação\\b", "")
-                                              // Remove 'Comarca' e o nome da comarca
                                               .replaceAll("\\bComarca\\s+[A-Z\\s]+\\b", "")
                                               .trim();
 
         System.out.println("DEBUG - Final Bloco Limpo para Parsing: '" + blocoLimpo + "'");
 
-        // Nova Regex para capturar os 7 campos, mais flexível para as variações observadas
         Pattern padraoCampos = Pattern.compile(
-            "^" + // Início da string
-            "(\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4})" + // 1: Processo (formato fixo)
-            "\\s+(.+?)" + // 2: Ação (não-guloso, até o próximo padrão de Vara)
-            "\\s+((?:\\d{1,2}º\\s+VARA|VARA)(?:[^\\d]+?|.*?))" + // 3: Órgão Julgador (Mais flexível para "VARA CIVEL" ou "VARA JURISDIÇÃO PLENA")
-            "\\s+(.+?)" + // 4: Assunto (texto, não-guloso, até a data)
-            "\\s+(\\d{2}/\\d{2}/\\d{4})" + // 5: Distribuição (data, forte âncora)
-            "\\s+PARTE\\s*(.*?)\\s*(ATIVA|PASSIVA)" + // 6: Tipo (PARTE... ATIVA/PASSIVA, capturando o meio)
-            "(?:\\s*(.*))?" + // 7: Participação (tudo que sobrar, opcional)
-            "$" // Fim da string
+            "^" +
+            "(\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4})" + // 1: Processo
+            "\\s+(.+?)" + // 2: Ação 
+            "\\s+((?:\\d{1,2}º\\s+VARA|VARA)(?:[^\\d]+?|.*?))" + // 3: Órgão Julgador
+            "\\s+(.+?)" + // 4: Assunto
+            "\\s+(\\d{2}/\\d{2}/\\d{4})" + // 5: Distribuição
+            "\\s+PARTE\\s*(.*?)\\s*(ATIVA|PASSIVA)" + // 6: Tipo
+            "(?:\\s*(.*))?" + // 7: Participação
+            "$" // FIM
         );
 
         Matcher localizadorCampos = padraoCampos.matcher(blocoLimpo);
@@ -156,46 +147,32 @@ public class ProcessadorPDF {
             String orgaoJulgador = localizadorCampos.group(3);
             String assunto = localizadorCampos.group(4);
             String distribuicao = localizadorCampos.group(5);
-            String tipo = "PARTE " + localizadorCampos.group(7); // Combina "PARTE" com "ATIVA" ou "PASSIVA"
-            String participacao = localizadorCampos.group(8); // O que sobra no final
+            String tipo = "PARTE " + localizadorCampos.group(7); 
+            String participacao = localizadorCampos.group(8);
 
-            // --- Pós-processamento para corrigir campos problemáticos ---
 
-            // Juntar partes do Assunto que foram separadas (ex: "Acidente de" e "Trânsito")
-            // Se o Assunto capturado for curto e o Participacao tiver algo que parece ser parte do Assunto
             if (assunto != null && participacao != null) {
-                // Heurística para "Acidente de Trânsito": se assunto é "Acidente de" e participação contém "Trânsito"
                 if (assunto.equalsIgnoreCase("Acidente de") && participacao.toLowerCase().contains("trânsito")) {
                     assunto = assunto + " Trânsito";
                     participacao = participacao.replaceAll("\\bTrânsito\\b", "").trim(); // Remove "Trânsito" da Participação
                 }
             }
             
-            // Lidar com "Superendividamento CONSUMO" para o Órgão Julgador na linha:
-            // '8090009-77.2025.8.05.0001 Procedimento Comum C├¡vel 3┬¬ VARA DE RELACOES DE Superendividamento 23/05/2025 PARTE PASSIVA CONSUMO rocesso A├º├úo ├ôrg├úo Julgador Assunto Distribui├º├úo Tipo Participa├º├úo'
-            // Nesse caso, "Superendividamento" deveria ser Assunto e "CONSUMO" parte do Órgão Julgador
             if (orgaoJulgador != null && assunto != null) {
                 Pattern p = Pattern.compile("(.*?) (CONSUMO)$");
                 Matcher m = p.matcher(orgaoJulgador.trim());
                 if(m.matches()) {
                     orgaoJulgador = m.group(1).trim() + " " + m.group(2).trim(); // Reconstroi o Órgão Julgador
-                    // O Assunto pode precisar de ajuste se "Superendividamento" foi capturado de forma estranha
-                    // A nova regex do Assunto já deve pegar "Superendividamento" corretamente.
                 }
             }
             
-            // Reajustar "Procedimento Comum Cível" dividido
-            // Se "Ação" for "Procedimento" e o "Órgão Julgador" começar com "VARA" e "Assunto" com "Comum Cível"
-            // Essa correção é mais complexa e talvez precise de verificação no debug.
-            // Por enquanto, a nova regex do Órgão Julgador deve ser mais flexível e capturar corretamente.
-
             dadosLinha.add(processo);
             dadosLinha.add(acao);
-            dadosLinha.add(orgaoJulgador.trim()); // Trim para remover espaços extras
-            dadosLinha.add(assunto.trim());       // Trim para remover espaços extras
+            dadosLinha.add(orgaoJulgador.trim()); 
+            dadosLinha.add(assunto.trim());       
             dadosLinha.add(distribuicao);
-            dadosLinha.add(tipo.trim());          // Trim para remover espaços extras
-            dadosLinha.add(participacao != null ? participacao.trim() : ""); // Participação pode ser nula
+            dadosLinha.add(tipo.trim());          
+            dadosLinha.add(participacao != null ? participacao.trim() : ""); 
 
         } else {
             System.err.println("Não foi possível parsear o registro completo com o padrão de campos: '" + blocoLimpo + "'");
