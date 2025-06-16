@@ -21,9 +21,9 @@ import java.util.regex.Pattern;
 public class ProcessadorPDF {
 
     public static void main(String[] args) {
-        String caminhoArquivoPDF = "Bahia - C6 - 1 grau - certidao_1_grau banco c6.pdf"; 
-        String caminhoPastaSaidaExcel = "C:/Users/moesio.fiuza/Desktop/SAIDA/";
-        String nomeArquivoExcel = "Bahia - C6 - 1 grau - certidao_1_grau banco c6.";
+        String caminhoArquivoPDF = "Arquivo de entrada PDF"; 
+        String caminhoPastaSaidaExcel = "Caminho que irá o arquivo de saída";
+        String nomeArquivoExcel = "Nome do Arquivo de Saída";
         String caminhoCompletoArquivoExcel = caminhoPastaSaidaExcel + nomeArquivoExcel;
 
         try {
@@ -73,7 +73,6 @@ public class ProcessadorPDF {
 
             String secaoTabelaCompleta = textoCompleto.substring(indiceInicio, indiceFim);
 
-            // Remover os cabeçalhos internos e normalizar espaços
             String dadosApenasString = secaoTabelaCompleta
                                           .replaceAll(Pattern.quote(marcadorInicioHeaderAchatado), "")
                                           .replaceAll(Pattern.quote(marcadorInicioHeaderComQuebra), "")
@@ -128,6 +127,7 @@ public class ProcessadorPDF {
         System.out.println("DEBUG - Final Bloco Limpo para Parsing: '" + blocoLimpo + "'");
 
         Pattern padraoCampos = Pattern.compile(
+<<<<<<< HEAD
             "^" +
             "(\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4})" + // 1: Processo
             "\\s+(.+?)" + // 2: Ação 
@@ -137,6 +137,17 @@ public class ProcessadorPDF {
             "\\s+PARTE\\s*(.*?)\\s*(ATIVA|PASSIVA)" + // 6: Tipo
             "(?:\\s*(.*))?" + // 7: Participação
             "$" // FIM
+=======
+            "^" + // Início
+            "(\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4})" + // 1: Processo 
+            "\\s+(.+?)" + // 2: Ação 
+            "\\s+((?:\\d{1,2}º\\s+VARA|VARA)(?:[^\\d]+?|.*?))" + // 3: Órgão Julgador 
+            "\\s+(.+?)" + // 4: Assunto 
+            "\\s+(\\d{2}/\\d{2}/\\d{4})" + // 5: Distribuição 
+            "\\s+PARTE\\s*(.*?)\\s*(ATIVA|PASSIVA)" + // 6: Tipo 
+            "(?:\\s*(.*))?" + // 7: Participação 
+            "$" // Fim
+>>>>>>> 429c430e96f3c8cfee066b176ce8af7f5c7d51ff
         );
 
         Matcher localizadorCampos = padraoCampos.matcher(blocoLimpo);
@@ -148,13 +159,18 @@ public class ProcessadorPDF {
             String assunto = localizadorCampos.group(4);
             String distribuicao = localizadorCampos.group(5);
             String tipo = "PARTE " + localizadorCampos.group(7); 
+<<<<<<< HEAD
             String participacao = localizadorCampos.group(8);
 
 
+=======
+            String participacao = localizadorCampos.group(8); 
+            
+>>>>>>> 429c430e96f3c8cfee066b176ce8af7f5c7d51ff
             if (assunto != null && participacao != null) {
                 if (assunto.equalsIgnoreCase("Acidente de") && participacao.toLowerCase().contains("trânsito")) {
                     assunto = assunto + " Trânsito";
-                    participacao = participacao.replaceAll("\\bTrânsito\\b", "").trim(); // Remove "Trânsito" da Participação
+                    participacao = participacao.replaceAll("\\bTrânsito\\b", "").trim();
                 }
             }
             
@@ -162,6 +178,7 @@ public class ProcessadorPDF {
                 Pattern p = Pattern.compile("(.*?) (CONSUMO)$");
                 Matcher m = p.matcher(orgaoJulgador.trim());
                 if(m.matches()) {
+<<<<<<< HEAD
                     orgaoJulgador = m.group(1).trim() + " " + m.group(2).trim(); // Reconstroi o Órgão Julgador
                 }
             }
@@ -172,6 +189,18 @@ public class ProcessadorPDF {
             dadosLinha.add(assunto.trim());       
             dadosLinha.add(distribuicao);
             dadosLinha.add(tipo.trim());          
+=======
+                    orgaoJulgador = m.group(1).trim() + " " + m.group(2).trim();
+
+                }
+            }
+            dadosLinha.add(processo);
+            dadosLinha.add(acao);
+            dadosLinha.add(orgaoJulgador.trim()); //remove espaços extras
+            dadosLinha.add(assunto.trim());      
+            dadosLinha.add(distribuicao);
+            dadosLinha.add(tipo.trim());         
+>>>>>>> 429c430e96f3c8cfee066b176ce8af7f5c7d51ff
             dadosLinha.add(participacao != null ? participacao.trim() : ""); 
 
         } else {
