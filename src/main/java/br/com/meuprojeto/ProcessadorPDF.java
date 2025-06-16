@@ -21,9 +21,9 @@ import java.util.regex.Pattern;
 public class ProcessadorPDF {
 
     public static void main(String[] args) {
-        String caminhoArquivoPDF = "Bahia - C6 - 1 grau - certidao_1_grau banco c6.pdf"; 
-        String caminhoPastaSaidaExcel = "C:/Users/moesio.fiuza/Desktop/SAIDA/";
-        String nomeArquivoExcel = "Bahia - C6 - 1 grau - certidao_1_grau banco c6.";
+        String caminhoArquivoPDF = "Arquivo de entrada PDF"; 
+        String caminhoPastaSaidaExcel = "Caminho que irá o arquivo de saída";
+        String nomeArquivoExcel = "Nome do Arquivo de Saída";
         String caminhoCompletoArquivoExcel = caminhoPastaSaidaExcel + nomeArquivoExcel;
 
         try {
