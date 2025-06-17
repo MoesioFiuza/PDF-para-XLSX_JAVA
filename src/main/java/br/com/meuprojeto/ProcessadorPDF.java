@@ -127,7 +127,6 @@ public class ProcessadorPDF {
         System.out.println("DEBUG - Final Bloco Limpo para Parsing: '" + blocoLimpo + "'");
 
         Pattern padraoCampos = Pattern.compile(
-<<<<<<< HEAD
             "^" +
             "(\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4})" + // 1: Processo
             "\\s+(.+?)" + // 2: Ação 
@@ -137,7 +136,7 @@ public class ProcessadorPDF {
             "\\s+PARTE\\s*(.*?)\\s*(ATIVA|PASSIVA)" + // 6: Tipo
             "(?:\\s*(.*))?" + // 7: Participação
             "$" // FIM
-=======
+
             "^" + // Início
             "(\\d{7}-\\d{2}\\.\\d{4}\\.8\\.05\\.\\d{4})" + // 1: Processo 
             "\\s+(.+?)" + // 2: Ação 
@@ -147,7 +146,6 @@ public class ProcessadorPDF {
             "\\s+PARTE\\s*(.*?)\\s*(ATIVA|PASSIVA)" + // 6: Tipo 
             "(?:\\s*(.*))?" + // 7: Participação 
             "$" // Fim
->>>>>>> 429c430e96f3c8cfee066b176ce8af7f5c7d51ff
         );
 
         Matcher localizadorCampos = padraoCampos.matcher(blocoLimpo);
@@ -159,11 +157,7 @@ public class ProcessadorPDF {
             String assunto = localizadorCampos.group(4);
             String distribuicao = localizadorCampos.group(5);
             String tipo = "PARTE " + localizadorCampos.group(7); 
-<<<<<<< HEAD
             String participacao = localizadorCampos.group(8);
-
-
-=======
             String participacao = localizadorCampos.group(8); 
             
             if (assunto != null && participacao != null) {
@@ -194,11 +188,10 @@ public class ProcessadorPDF {
             }
             dadosLinha.add(processo);
             dadosLinha.add(acao);
-            dadosLinha.add(orgaoJulgador.trim()); //remove espaços extras
+            dadosLinha.add(orgaoJulgador.trim()); 
             dadosLinha.add(assunto.trim());      
             dadosLinha.add(distribuicao);
             dadosLinha.add(tipo.trim());         
->>>>>>> 429c430e96f3c8cfee066b176ce8af7f5c7d51ff
             dadosLinha.add(participacao != null ? participacao.trim() : ""); 
 
         } else {
