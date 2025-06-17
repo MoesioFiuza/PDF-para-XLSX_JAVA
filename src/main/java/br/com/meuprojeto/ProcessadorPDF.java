@@ -166,7 +166,6 @@ public class ProcessadorPDF {
 =======
             String participacao = localizadorCampos.group(8); 
             
->>>>>>> 429c430e96f3c8cfee066b176ce8af7f5c7d51ff
             if (assunto != null && participacao != null) {
                 if (assunto.equalsIgnoreCase("Acidente de") && participacao.toLowerCase().contains("trânsito")) {
                     assunto = assunto + " Trânsito";
@@ -178,8 +177,7 @@ public class ProcessadorPDF {
                 Pattern p = Pattern.compile("(.*?) (CONSUMO)$");
                 Matcher m = p.matcher(orgaoJulgador.trim());
                 if(m.matches()) {
-<<<<<<< HEAD
-                    orgaoJulgador = m.group(1).trim() + " " + m.group(2).trim(); // Reconstroi o Órgão Julgador
+                    orgaoJulgador = m.group(1).trim() + " " + m.group(2).trim(); 
                 }
             }
             
@@ -189,7 +187,7 @@ public class ProcessadorPDF {
             dadosLinha.add(assunto.trim());       
             dadosLinha.add(distribuicao);
             dadosLinha.add(tipo.trim());          
-=======
+
                     orgaoJulgador = m.group(1).trim() + " " + m.group(2).trim();
 
                 }
